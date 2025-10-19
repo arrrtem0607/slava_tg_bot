@@ -59,7 +59,9 @@ def registration_dialog() -> Dialog:
     )
 
 
-async def on_full_name_received(message: Message, dialog_manager: DialogManager, **__):
+async def on_full_name_received(
+    message: Message, _: MessageInput, dialog_manager: DialogManager, **__
+):
     full_name = (message.text or message.html_text or "").strip()
     if not full_name:
         await message.answer(texts.ASK_FULL_NAME)
@@ -69,7 +71,9 @@ async def on_full_name_received(message: Message, dialog_manager: DialogManager,
     await dialog_manager.switch_to(Registration.birth_date)
 
 
-async def on_birth_date_received(message: Message, dialog_manager: DialogManager, **kwargs):
+async def on_birth_date_received(
+    message: Message, _: MessageInput, dialog_manager: DialogManager, **kwargs
+):
     if message.from_user is None:
         return
     try:

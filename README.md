@@ -12,6 +12,9 @@
 - Python 3.10+
 - PostgreSQL 13+
 
+> ⚠️ Проект требует `aiogram` версии **3.7.0** или новее. Для задания `parse_mode` и других
+> параметров по умолчанию используются `DefaultBotProperties`.
+
 ## Настройка окружения
 1. Создайте и активируйте виртуальное окружение:
    ```bash
@@ -24,8 +27,8 @@
    ```
 3. Создайте файл `.env` на основе `.env.example` и укажите ваши значения:
    ```env
-   BOT_TOKEN=ваш_токен
-   DATABASE_URL=postgresql+asyncpg://user:password@host:port/database
+   BOT_TOKEN=your_bot_token_here
+   DATABASE_URL=postgresql+asyncpg://magic_user:magic_pass@localhost:5432/magic_db
    ```
 4. Выполните миграции (создайте таблицы) с помощью SQLAlchemy:
    ```bash
@@ -61,10 +64,26 @@ project_root/
 ```
 
 ## Подготовка базы данных
-1. Создайте базу данных PostgreSQL.
-2. Выполните SQL-скрипт `db/seed_fates.sql`, который создаст таблицы и наполнит `fates` тестовыми значениями:
+### Автоматическое создание пользователя и базы
+```bash
+chmod +x scripts/setup_db.sh
+./scripts/setup_db.sh
+```
+
+### Ручной сценарий
+1. Подключитесь к PostgreSQL под пользователем `postgres`:
    ```bash
-   psql -d magicbot -f db/seed_fates.sql
+   psql -U postgres
+   ```
+2. Создайте пользователя `magic_user` и базу данных `magic_db` в PostgreSQL и выдайте права:
+   ```sql
+   CREATE USER magic_user WITH PASSWORD 'magic_pass';
+   CREATE DATABASE magic_db OWNER magic_user;
+   GRANT ALL PRIVILEGES ON DATABASE magic_db TO magic_user;
+   ```
+3. Выполните SQL-скрипт `db/seed_fates.sql`, который создаст таблицы и наполнит `fates` тестовыми значениями:
+   ```bash
+   psql -d magic_db -f db/seed_fates.sql
    ```
 
 ## Дополнительно

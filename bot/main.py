@@ -4,6 +4,7 @@ import asyncio
 import logging
 
 from aiogram import Bot, Dispatcher
+from aiogram.client.default import DefaultBotProperties
 from aiogram.enums import ParseMode
 from aiogram.fsm.storage.memory import MemoryStorage
 from aiogram_dialog import setup_dialogs
@@ -18,7 +19,10 @@ async def main() -> None:
     logging.basicConfig(level=logging.INFO)
     settings = load_settings()
 
-    bot = Bot(token=settings.bot.token, parse_mode=ParseMode.HTML)
+    bot = Bot(
+        token=settings.bot.token,
+        default=DefaultBotProperties(parse_mode=ParseMode.HTML),
+    )
     storage = MemoryStorage()
     dp = Dispatcher(storage=storage)
 

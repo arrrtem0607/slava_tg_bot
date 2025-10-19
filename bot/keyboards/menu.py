@@ -1,23 +1,17 @@
 from __future__ import annotations
 
-from aiogram.types import CallbackQuery
-from aiogram_dialog import DialogManager
-from aiogram_dialog.widgets.kbd import Button, Row
+from aiogram.types import InlineKeyboardButton, InlineKeyboardMarkup
 
-from bot.dialogs.states import Registration
-
-
-async def magic_number_clicked(callback: CallbackQuery, _: Button, manager: DialogManager):
-    await callback.answer()
-    await manager.switch_to(Registration.magic_number)
+MAGIC_NUMBER_CALLBACK = "menu:get_magic_number"
+FATE_CALLBACK = "menu:get_fate"
+SETTINGS_CALLBACK = "menu:settings"
 
 
-async def fate_clicked(callback: CallbackQuery, _: Button, manager: DialogManager):
-    await callback.answer()
-    await manager.switch_to(Registration.fate)
-
-
-main_menu_row = Row(
-    Button(text="🔢 Найти моё число", id="find_magic_number", on_click=magic_number_clicked),
-    Button(text="📜 Моя судьба", id="show_fate", on_click=fate_clicked),
-)
+def main_menu_keyboard() -> InlineKeyboardMarkup:
+    return InlineKeyboardMarkup(
+        inline_keyboard=[
+            [InlineKeyboardButton(text="🔢 Найти моё число", callback_data=MAGIC_NUMBER_CALLBACK)],
+            [InlineKeyboardButton(text="📜 Моя судьба", callback_data=FATE_CALLBACK)],
+            [InlineKeyboardButton(text="⚙️ Настройки", callback_data=SETTINGS_CALLBACK)],
+        ]
+    )

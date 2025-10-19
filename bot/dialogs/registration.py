@@ -4,16 +4,16 @@ import logging
 from datetime import datetime
 
 from aiogram.types import CallbackQuery, Message
-from aiogram_dialog import Dialog, DialogManager, Window
+from aiogram_dialog import Dialog, DialogManager, ShowMode, Window
 from aiogram_dialog.widgets.input import MessageInput
 from aiogram_dialog.widgets.kbd import Button
 from aiogram_dialog.widgets.text import Const, Format
 
 from bot.dialogs.states import Registration
-from bot.keyboards.menu import main_menu_row
+from bot.keyboards.menu import main_menu_keyboard
 from bot.lexicon import texts
 from bot.services.magic import calculate_magic_number
-from db.orm import ORMController, UserAlreadyExistsError
+from db.orm import FateData, ORMController, UserAlreadyExistsError
 
 logger = logging.getLogger(__name__)
 
@@ -39,8 +39,6 @@ def registration_dialog() -> Dialog:
         ),
         Window(
             Const(texts.MENU_PROMPT),
-            main_menu_row,
-            Button(Const("⚙️ Настройки"), id="settings_placeholder", on_click=settings_placeholder),
             state=Registration.menu,
         ),
         Window(
@@ -88,7 +86,7 @@ async def on_birth_date_received(
     dialog_manager.dialog_data["magic_number"] = magic_number
 
     orm: ORMController = dialog_manager.middleware_data["orm"]
-    fate = await orm.get_fate_by_magic_number(magic_number)
+    fate: FateData | None = await orm.get_fate_by_magic_number(magic_number)
     fate_id = fate.id if fate else None
 
     try:
@@ -114,7 +112,8 @@ async def on_birth_date_received(
     dialog_manager.dialog_data["fate"] = fate.description if fate else None
 
     await message.answer(texts.REGISTRATION_COMPLETE)
-    await dialog_manager.switch_to(Registration.menu)
+    await dialog_manager.switch_to(Registration.menu, show_mode=ShowMode.NO_SHOW)
+    await message.answer(texts.MENU_PROMPT, reply_markup=main_menu_keyboard())
 
 
 async def get_magic_number(dialog_manager: DialogManager, **__):
@@ -139,9 +138,11 @@ async def get_fate_text(dialog_manager: DialogManager, **__):
         orm: ORMController | None = dialog_manager.middleware_data.get("orm")
         if telegram_id and orm:
             user = await orm.get_user(telegram_id)
-            if user and user.fate:
-                fate_text = user.fate.description
-                dialog_manager.dialog_data["fate"] = fate_text
+            if user and user.fate_id:
+                fate_data = await orm.get_fate_by_magic_number(user.magic_number)
+                if fate_data:
+                    fate_text = fate_data.description
+                    dialog_manager.dialog_data["fate"] = fate_text
     if not fate_text:
         fate_text = texts.FATE_NOT_FOUND
     else:
@@ -151,8 +152,7 @@ async def get_fate_text(dialog_manager: DialogManager, **__):
 
 async def back_to_menu(callback: CallbackQuery, _: Button, manager: DialogManager):
     await callback.answer()
-    await manager.switch_to(Registration.menu)
+    await manager.switch_to(Registration.menu, show_mode=ShowMode.NO_SHOW)
+    await callback.message.answer(texts.MENU_PROMPT, reply_markup=main_menu_keyboard())
 
 
-async def settings_placeholder(callback: CallbackQuery, _: Button, manager: DialogManager):
-    await callback.answer("Скоро здесь появятся настройки!", show_alert=True)

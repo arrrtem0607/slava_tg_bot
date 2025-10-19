@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from datetime import date
+from dataclasses import dataclass
 from typing import Any
 
 from sqlalchemy import select, update
@@ -12,6 +13,12 @@ from db.models import Fate, User
 
 class UserAlreadyExistsError(Exception):
     """Raised when trying to register a user that already exists."""
+
+
+@dataclass(slots=True, frozen=True)
+class FateData:
+    id: int
+    description: str
 
 
 class ORMController:
@@ -68,9 +75,14 @@ class ORMController:
         )
         return result.scalars().first()
 
-    async def get_fate_by_magic_number(self, number: int) -> Fate | None:
-        result = await self._session.execute(select(Fate).where(Fate.magic_number == number))
-        return result.scalars().first()
+    async def get_fate_by_magic_number(self, number: int) -> FateData | None:
+        result = await self._session.execute(
+            select(Fate.id, Fate.description).where(Fate.magic_number == number)
+        )
+        row = result.first()
+        if row is None:
+            return None
+        return FateData(id=row.id, description=row.description)
 
     async def update_fate(self, number: int, description: str) -> Fate:
         stmt = (
